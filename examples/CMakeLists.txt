@@ -5,5 +5,6 @@ add_subdirectory(heat1d)
 add_subdirectory(heat2d)
 add_subdirectory(heat3d)
 add_subdirectory(fftw_2d)
+add_subdirectory(GrayScott)
 
 set(examples_to_install ${examples_to_install} PARENT_SCOPE)

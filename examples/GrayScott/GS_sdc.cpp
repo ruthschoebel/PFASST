@@ -1,0 +1,130 @@
+#include <memory>
+
+#include <iostream>
+
+
+using std::shared_ptr;
+
+#include <pfasst.hpp>
+#include <pfasst/quadrature.hpp>
+
+#include <pfasst/encap/dune_vec.hpp>
+
+
+
+
+#include <pfasst/controller/sdc.hpp>
+#include <pfasst/contrib/spectral_transfer.hpp>
+
+#include "GS_sweeper.hpp"
+
+using encap_traits_t = pfasst::encap::dune_vec_encap_traits<double, double, 2>;
+// using encap_traits_t = pfasst::eigen3_encap_traits<double, double, 2>;
+
+
+namespace pfasst
+{
+  namespace examples
+  {
+    namespace heat2d
+    {
+      using sweeper_t = Heat2D<pfasst::sweeper_traits<encap_traits_t>>;
+      using pfasst::transfer_traits;
+      using pfasst::contrib::SpectralTransfer;
+      using pfasst::SDC;
+      using pfasst::quadrature::QuadratureType;
+      using heat2d_sdc_t = SDC<SpectralTransfer<transfer_traits<sweeper_t, sweeper_t, 1>>>;
+
+      shared_ptr<heat2d_sdc_t> run_sdc(const size_t ndofs, const size_t nnodes,
+                                       const QuadratureType& quad_type, const double& t_0,
+                                       const double& dt, const double& t_end, const size_t niter)
+      {
+        using pfasst::quadrature::quadrature_factory;
+
+        auto sdc = std::make_shared<heat2d_sdc_t>();
+
+        auto sweeper = std::make_shared<sweeper_t>(ndofs);
+
+        sweeper->quadrature() = quadrature_factory<double>(nnodes, quad_type);
+
+        sdc->add_sweeper(sweeper);
+        sdc->set_options();
+
+        sdc->status()->time() = t_0;
+        sdc->status()->dt() = dt;
+        sdc->status()->t_end() = t_end;
+        sdc->status()->max_iterations() = niter;
+
+        sdc->setup(); //quadraturmatrizen, etc
+
+        sweeper->initial_state() = sweeper->exact(sdc->get_status()->get_time());
+
+        sdc->run();
+        sdc->post_run();
+
+        //so koennte ich auf die raeumlichen Elemente zugreifen
+        //auto out = sweeper->get_end_state()->data();
+        //int i=0;
+        //for (auto it=out.begin(); it!=out.end(); ++it){
+        //  i++;
+        //}
+        //std::cout << i << " " << std::endl;
+        //out[0] out.begin out.end
+
+
+        //std::cout<<"GS"<<std::endl;
+
+
+        return sdc;
+      }
+    }  // ::pfasst::examples::heat2d
+  } // ::pfasst::examples
+}  // ::pfasst
+
+
+#ifndef PFASST_UNIT_TESTING
+  int main(int argc, char** argv)
+  {
+    using pfasst::config::get_value;
+    using pfasst::quadrature::QuadratureType;
+    using pfasst::examples::heat2d::Heat2D;
+
+    using sweeper_t = Heat2D<pfasst::sweeper_traits<encap_traits_t>>;
+
+    pfasst::init(argc, argv, sweeper_t::init_opts);
+
+    const size_t ndofs = get_value<size_t>("num_dofs", 8);
+    const size_t nnodes = get_value<size_t>("num_nodes", 3);
+    const QuadratureType quad_type = QuadratureType::GaussRadau;
+    const double t_0 = 0.0;
+    const double dt = get_value<double>("dt", 0.01);
+    double t_end = get_value<double>("tend", -1);
+    size_t nsteps = get_value<size_t>("num_steps", 0);
+    if (t_end == -1 && nsteps == 0) {
+      ML_CLOG(ERROR, "USER", "Either t_end or num_steps must be specified.");
+      throw std::runtime_error("either t_end or num_steps must be specified");
+    } else if (t_end != -1 && nsteps != 0) {
+      if (!pfasst::almost_equal(t_0 + nsteps * dt, t_end)) {
+        ML_CLOG(ERROR, "USER", "t_0 + nsteps * dt != t_end ("
+                            << t_0 << " + " << nsteps << " * " << dt << " = " << (t_0 + nsteps * dt)
+                            << " != " << t_end << ")");
+        throw std::runtime_error("t_0 + nsteps * dt != t_end");
+      }
+    } else if (nsteps != 0) {
+      t_end = t_0 + dt * nsteps;
+    }
+    const size_t niter = get_value<size_t>("num_iters", 5);
+
+
+
+    pfasst::examples::heat2d::run_sdc(ndofs, nnodes, quad_type, t_0, dt, t_end, niter);
+
+
+
+
+
+
+
+
+  }
+#endif
