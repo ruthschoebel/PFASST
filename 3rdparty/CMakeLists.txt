@@ -15,7 +15,7 @@ if(${pfasst_BUILD_SHARED_LIBS})
 else()
     set(Boost_USE_STATIC_LIBS ON)
 endif()
-set(Boost_ADDITIONAL_VERSIONS "1.59" "1.59.0" "1.58" "1.58.0" "1.57" "1.57.0" ${Boost_ADDITIONAL_VERSIONS})
+set(Boost_ADDITIONAL_VERSIONS "1.59" "1.59.0" "1.58" "1.58.0" "1.57" "1.57.0" "1.60.0" ${Boost_ADDITIONAL_VERSIONS})
 
 if(${compiler_version_available} AND ${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
     set(Boost_COMPILER "-clang${CMAKE_CXX_COMPILER_VERSION_MAJOR}${CMAKE_CXX_COMPILER_VERSION_MINOR}")
@@ -159,6 +159,46 @@ set(FFTW_FOUND ${FFTW_FOUND} PARENT_SCOPE)
 list(APPEND 3rdparty_INCLUDES "${FFTW_INCLUDE_PATH}")
 list(APPEND 3rdparty_DEPENDEND_LIBS "${FFTW_LIBRARIES}")
 
+message(STATUS "--------------------------------------------------------------------------------")
+message(STATUS "Dune")
+
+
+find_package(dune-common CONFIG)
+find_package(dune-istl CONFIG)
+find_package(dune-localfunctions CONFIG)
+find_package(dune-grid CONFIG)
+
+if(dune-common_DIR AND dune-istl_DIR AND dune-localfunctions_DIR AND dune-grid_DIR)
+    message(STATUS "Found Dune")
+    message(STATUS "  dune-common:")
+    message(STATUS "    - cmake:   ${dune-common_DIR}")
+    message(STATUS "    - include: ${dune-common_INCLUDE_DIRS}")
+    message(STATUS "    - libs:    ${dune-common_LIBRARIES}")
+    message(STATUS "  dune-istl:")
+    message(STATUS "    - cmake:   ${dune-istl_DIR}")
+    message(STATUS "    - include: ${dune-istl_INCLUDE_DIRS}")
+    message(STATUS "    - libs:    ${dune-istl_LIBRARIES}")
+    message(STATUS "  dune-local:")
+    message(STATUS "    - cmake:   ${dune-localfunctions_DIR}")
+    message(STATUS "    - include: ${dune-localfunctions_INCLUDE_DIRS}")
+    message(STATUS "    - libs:    ${dune-localfunctions_LIBRARIES}")
+    message(STATUS "  dune-grid:")
+    message(STATUS "    - cmake:   ${dune-grid_DIR}")
+    message(STATUS "    - include: ${dune-grid_INCLUDE_DIRS}")
+    message(STATUS "    - libs:    ${dune-grid_LIBRARIES}")
+    set(dune_INCLUDE_PATHS ${dune-common_INCLUDE_DIRS} ${dune-istl_INCLUDE_DIRS} ${dune-localfunctions_INCLUDE_DIRS} ${dune-grid_INCLUDE_DIRS})
+    set(dune_LIBRARIES ${dune-common_LIBRARIES} ${dune-istl_LIBRARIES} ${dune-localfunctions_LIBRARIES} ${dune-grid_LIBRARIES})
+    set(dune_FOUND TRUE PARENT_SCOPE)
+else()
+    set(dune_FOUND FALSE PARENT_SCOPE)
+endif()
+
+list(APPEND 3rdparty_INCLUDES "${dune_INCLUDE_PATHS}")
+list(APPEND 3rdparty_DEPENDEND_LIBS "${dune_LIBRARIES}")
+
+
+
+
 
 if(pfasst_BUILD_TESTS)
     set(TESTS_3rdparty_INCLUDES ${TESTS_3rdparty_INCLUDES})
@@ -229,3 +269,4 @@ set(pfasst_DEPENDEND_TARGETS ${pfasst_DEPENDEND_TARGETS} PARENT_SCOPE)
 set(pfasst_TESTS_DEPENDEND_TARGETS ${pfasst_TESTS_DEPENDEND_TARGETS} PARENT_SCOPE)
 set(TESTS_3rdparty_DEPENDEND_LIBS ${TESTS_3rdparty_DEPENDEND_LIBS} PARENT_SCOPE)
 set(TESTS_3rdparty_INCLUDES ${TESTS_3rdparty_INCLUDES} PARENT_SCOPE)
+
