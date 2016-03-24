@@ -5,6 +5,7 @@ include_directories(
     ${pfasst_INCLUDES}
     ${PROJECT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${FFTW3_INCLUDE_PATH}
 )
 
 set(TESTS
@@ -19,16 +20,12 @@ if(NOT ${pfasst_WITH_MPI})
     foreach(test ${TESTS})
         message(STATUS "  ${test}")
         add_executable(${test} ${test}.cpp)
-        if(${pfasst_NUM_DEPENDEND_TARGETS} GREATER 0)
-            add_dependencies(${test} ${pfasst_DEPENDEND_TARGETS})
-        endif()
-        if(${pfasst_TESTS_NUM_DEPENDEND_TARGETS} GREATER 0)
-            add_dependencies(${test} ${pfasst_TESTS_DEPENDEND_TARGETS})
-        endif()
+        add_dependencies(${test} ${pfasst_DEPENDEND_TARGETS})
         target_link_libraries(${test}
             ${3rdparty_DEPENDEND_LIBS}
             ${TESTS_3rdparty_DEPENDEND_LIBS}
             ${pfasst_DEPENDEND_LIBS}
+            ${FFTW3_LIBRARIES}
         )
         if(pfasst_WITH_GCC_PROF AND ${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
             set_target_properties(${test}
@@ -45,16 +42,12 @@ else()
     foreach(test ${TESTS_MPI})
         message(STATUS "  ${test}")
         add_executable(${test} ${test}.cpp)
-        if(${pfasst_NUM_DEPENDEND_TARGETS} GREATER 0)
-            add_dependencies(${test} ${pfasst_DEPENDEND_TARGETS})
-        endif()
-        if(${pfasst_TESTS_NUM_DEPENDEND_TARGETS} GREATER 0)
-            add_dependencies(${test} ${pfasst_TESTS_DEPENDEND_TARGETS})
-        endif()
+        add_dependencies(${test} ${pfasst_DEPENDEND_TARGETS})
         target_link_libraries(${test}
             ${3rdparty_DEPENDEND_LIBS}
             ${TESTS_3rdparty_DEPENDEND_LIBS}
             ${pfasst_DEPENDEND_LIBS}
+            ${FFTW3_LIBRARIES}
         )
         if(pfasst_WITH_GCC_PROF AND ${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
             set_target_properties(${test}

@@ -10,11 +10,14 @@ include(FeatureSummary)
 
 list(APPEND CMAKE_FIND_ROOT_PATH ${pfasst_SOURCE_DIR}/stack)
 
+set(3rdparty_PREFIX "${CMAKE_SOURCE_DIR}/3rdparty")
+set(3rdparty_TMP_PREFIX "${CMAKE_BINARY_DIR}/3rdparty")
 # Set default ExternalProject root directory
-set_directory_properties(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/3rdparty)
+set_directory_properties(PROPERTIES EP_PREFIX "${3rdparty_PREFIX}")
+
 
 option(pfasst_DISABLE_LIBCXX    "Disable use of LLVM's libc++ when compiling with Clang." ON )
-option(pfasst_BUILD_SHARED_LIBS "Build shared libraries."                                 ON )
+option(BUILD_SHARED_LIBS        "Build shared libraries."                                 OFF)
 
 option(pfasst_BUILD_EXAMPLES    "Build example programs."                                 ON )
 cmake_dependent_option(
@@ -24,6 +27,9 @@ cmake_dependent_option(
 option(pfasst_BUILD_TESTS       "Build test suite for PFASST."                            ON )
 
 option(pfasst_WITH_MPI          "Build with MPI enabled."                                 ON )
+option(pfasst_SYSTEM_BOOST      "Use system's Boost library; fail if not found"           OFF)
+option(pfasst_SYSTEM_FFTW3      "Use system's FFTW library; fail if not found"            OFF)
+option(pfasst_SYSTEM_EIGEN3     "Use system's Eigen3 library; fail if not found"          OFF)
 
 option(pfasst_WITH_GCC_PROF     "Enable excessive debugging & profiling output with GCC." OFF)
 cmake_dependent_option(
@@ -171,12 +177,14 @@ endif(pfasst_BUILD_TESTS)
 message(STATUS "********************************************************************************")
 message(STATUS "Configuring 3rd party libraries")
 # makes available:
-#  - Boost headers in 3rdparty_INCLUDES
-#  - Boost libraries in Boost_LIBRARY_DIRS
-#  - Eigen headers in 3rdparty_INCLUDES
-#  - Google test and mock headers in 3rdparty_INCLUDES (if pfasst_BUILD_TESTS)
-#  - FFTW_INCLUDE_PATH (if pfasst_BUILD_EXAMPLES)
-#  - FFTW_LIBRARIES (if pfasst_BUILD_EXAMPLES)
+#  - required headers in 3rdparty_INCLUDES
+#  - required libraries in 3rdparty_DEPENDEND_LIBS and pfasst_DEPENDEND_LIBS
+#  - Google test and mock headers in TESTS_3rdparty_INCLUDES (if pfasst_BUILD_TESTS)
+#  - Google test and mock libraries in TESTS_3rdparty_DEPENDEND_LIBS (if pfasst_BUILD_TESTS)
+#  - FFTW3_INCLUDE_PATH
+#  - FFTW3_LIBRARIES
+#  - dune_INCLUDE_PATHS
+#  - dune_LIBRARIES
 add_subdirectory(3rdparty)
 
 message(STATUS "********************************************************************************")
